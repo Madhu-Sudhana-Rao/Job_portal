@@ -6,6 +6,8 @@ import connectDB from "./utils/db.js";
 import userRoute from "./routes/user_routes.js"; 
 import companyRoute from "./routes/company_rotes.js";
 import jobRoute from "./routes/job_routes.js";
+import applicationRoute from "./routes/application_route.js";
+
 
 dotenv.config();
 
@@ -27,6 +29,8 @@ app.use(cors(corsOptions));
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/company", companyRoute);
 app.use("/api/v1/jobs", jobRoute);
+app.use("/api/v1/application", applicationRoute);
+
 
 // Test route
 app.get("/home", (req, res) => {

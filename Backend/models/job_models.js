@@ -1,4 +1,3 @@
-import { application } from "express";
 import mongoose from "mongoose";
 
 const jobSchema = new mongoose.Schema({
@@ -35,18 +34,18 @@ const jobSchema = new mongoose.Schema({
     },
     company: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Company",
+        ref: "company",
         required: true
     },
     created_by: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Company",
+        ref: "company",
         required: true
     },
     application: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Company',
-        required: true
+        ref: 'company',
+        required: false
     }
 }, { timestamps: true });
 

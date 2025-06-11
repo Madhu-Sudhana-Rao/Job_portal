@@ -1,6 +1,6 @@
 import { job } from "../models/job_models.js";
 
-export const post_job = async (req,res) => {
+export const post_job = async (req, res) => {
     try {
         const { title, description, requirements, salary, location, jobType, experience, position, companyId } = req.body;
         const userId = req.id;
@@ -8,13 +8,14 @@ export const post_job = async (req,res) => {
         if (!title || !description || !requirements || !salary || !location || !jobType || !experience || !position || !companyId) {
             return res.status(400).json({
                 message: "Something is missing",
-                success:false
-            })
-        };
-        const job = await job.create({
+                success: false
+            });
+        }
+
+        const jobPost = await job.create({
             title,
             description,
-            requirements: requirements.split(","),
+            requirements: Array.isArray(requirements) ? requirements : requirements.split(","),
             salary: Number(salary),
             location,
             jobType,
@@ -23,14 +24,20 @@ export const post_job = async (req,res) => {
             company: companyId,
             created_by: userId
         });
+
         return res.status(201).json({
-            message: "New job created Successfully",
-            success: true
+            message: "New job created successfully",
+            success: true,
+            job: jobPost
         });
     } catch (error) {
-        console.log(error);
+        console.error(error);
+        return res.status(500).json({
+            message: "Server error while creating job",
+            success: false
+        });
     }
-}
+};
 
 export const getAllJobs = async (req, res) => {
     try {
@@ -38,63 +45,78 @@ export const getAllJobs = async (req, res) => {
         const query = {
             $or: [
                 { title: { $regex: keyword, $options: "i" } },
-                { description: { $regex: keyword, $options: "i" } },
-                
+                { description: { $regex: keyword, $options: "i" } }
             ]
         };
-        const jobs = await job.find(query);
-        if (!jobs) {
+
+        const jobs = await job.find(query).populate({
+            path: "company",
+            
+        }).sort({createdAt:-1});
+        if (!jobs.length) {
             return res.status(404).json({
-                message: "Job not found",
-                success:false
-            })
+                message: "No jobs found",
+                success: false
+            });
         }
+
         return res.status(200).json({
             jobs,
             success: true
-        })
+        });
     } catch (error) {
-        console.log(error);
-        
+        console.error(error);
+        return res.status(500).json({
+            message: "Server error while fetching jobs",
+            success: false
+        });
     }
-}
+};
 
 export const getJobById = async (req, res) => {
     try {
-        const jobId = req.params.id
-        const job = job.findById(jobId);
-        if (!job) {
+        const jobId = req.params.id;
+        const jobPost = await job.findById(jobId);
+
+        if (!jobPost) {
             return res.status(404).json({
-                message: "Jobs not found",
-                success:false
-            })
+                message: "Job not found",
+                success: false
+            });
         }
-        
-        return res.status(200).json({ job, success: true });
+
+        return res.status(200).json({ job: jobPost, success: true });
 
     } catch (error) {
-        console.log(error)
+        console.error(error);
+        return res.status(500).json({
+            message: "Server error while fetching job",
+            success: false
+        });
     }
-}
+};
 
 export const getAdminJob = async (req, res) => {
     try {
         const adminId = req.id;
         const jobs = await job.find({ created_by: adminId });
-        if (!jobs)
-        {
+
+        if (!jobs.length) {
             return res.status(404).json({
-                message: "Jobs not found",
+                message: "No jobs found for admin",
                 success: false
-            })
-        };
+            });
+        }
+
         return res.status(200).json({
             jobs,
-            success:true
-        })
+            success: true
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message: "Server error while fetching admin jobs",
+            success: false
+        });
     }
-    catch(error) {
-        console.log(error);
-        
-    }
-}
+};
